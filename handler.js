@@ -4,6 +4,15 @@ const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
 const path = require("path");
 
+const s3 = new AWS.S3({
+  endpoint: "http://localhost:9000",
+  accessKeyId: "minioadmin",
+  secretAccessKey: "minioadmin",
+  s3ForcePathStyle: true,
+  signatureVersion: "v4",
+});
+const BUCKET_NAME = "memes-bucket"; // Changer par le nom de ton bucket
+
 const dynamoDb = new AWS.DynamoDB.DocumentClient(
   process.env.IS_OFFLINE && {
     region: "localhost",
@@ -42,6 +51,7 @@ exports.generateMeme = async (event) => {
     const width = 500;
     const height = 500;
     const bgImg = await loadImage(bgImgUrl);
+    console.log(bgImg);
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 
@@ -60,13 +70,22 @@ exports.generateMeme = async (event) => {
     const key = uuidv4().slice(0, 8);
     const buffer = canvas.toBuffer("image/png");
 
+    await s3.upload({
+      Bucket: BUCKET_NAME,
+      Key: `${key}.png`,
+      Body: buffer,
+      ContentType: "image/png",
+    }).promise();
+
+    const imageUrl = `${s3.endpoint.href}${BUCKET_NAME}/${key}.png`;
+
     const params = {
       TableName: TABLE_NAME,
       Item: {
         key,
         topText,
         bottomText,
-        image: buffer,
+        image_url: imageUrl,
         createdAt: new Date().toISOString(),
       },
     };
@@ -75,7 +94,7 @@ exports.generateMeme = async (event) => {
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: "Meme generated and saved successfully in DynamoDB",
+        message: "Meme generated and saved successfully in Minio",
         key,
       }),
     };
@@ -103,11 +122,6 @@ exports.downloadMeme = async (event) => {
 
   return {
     statusCode: 200,
-    headers: {
-      "Content-Type": "image/png",
-      "Content-Disposition": 'attachment; filename="meme.png"',
-    },
-    body: Item.image.toString("base64"),
-    isBase64Encoded: true,
+    body: JSON.stringify({ imageUrl: Item.image_url })
   };
 };
