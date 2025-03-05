@@ -48,10 +48,9 @@ exports.generateMeme = async (event) => {
   try {
     const body = JSON.parse(event.body);
     const { topText, bottomText, bgImgUrl } = body;
-    const width = 500;
-    const height = 500;
     const bgImg = await loadImage(bgImgUrl);
-    console.log(bgImg);
+    const width = bgImg.width;
+    const height = bgImg.height;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext("2d");
 

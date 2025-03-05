@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Générateur de Meme</title>
-    <link rel="stylesheet" href="style.css" />
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -122,9 +121,9 @@
 
       <div id="meme-result">
         <h2>Votre Meme</h2>
-        <img id="meme-img" />
+        <img id="meme-img" alt="" />
         <!-- Bouton de téléchargement caché au début -->
-        <a id="download-btn" download="meme-image.png">
+        <a id="download-btn">
           <button>Télécharger l'image</button>
         </a>
       </div>
@@ -141,8 +140,7 @@
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        // Envoyer la requête pour générer le mème
-        const resp = await fetch("https://api.my-meme-generator.com/memes", {
+        const resp = await fetch("http://localhost:3000/dev/generate", {
           method: "POST",
           body: JSON.stringify({
             bgImgUrl: imgUrl.value,
@@ -156,12 +154,18 @@
 
         const data = await resp.json();
 
-        // Définir l'URL de l'image du mème généré
-        memeImg.src = data.memeUrl;
+        const download = await fetch("http://localhost:3000/dev/download/" + data.key, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const imageData = await download.json();
 
-        // Afficher le bouton de téléchargement avec l'URL de l'image
-        downloadBtn.style.display = "inline-block"; // Afficher le bouton
-        downloadBtn.href = data.memeUrl; // Définir l'URL de l'image comme source pour le téléchargement
+        memeImg.src = imageData.imageUrl;
+        downloadBtn.style.display = "inline-block";
+        downloadBtn.href = imageData.imageUrl;
+        downloadBtn.download = "meme-image.png";
       });
     </script>
   </body>
