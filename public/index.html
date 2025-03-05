@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Générateur de Meme</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f9;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .container {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 500px;
+      }
+
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+      }
+
+      label {
+        font-weight: bold;
+        margin-top: 10px;
+        color: #333;
+      }
+
+      input,
+      textarea {
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      textarea {
+        resize: vertical;
+        height: 100px;
+      }
+
+      button {
+        border-radius: 4px;
+        cursor: pointer;
+        color: white;
+        border: none;
+        padding: 10px;
+      }
+
+      #submit-btn {
+        background-color: #4caf50;
+        margin-top: 15px;
+      }
+
+      #submit-btn:hover {
+        background-color: #45a049;
+      }
+
+      #meme-result {
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      #meme-img {
+        max-width: 100%;
+        border-radius: 8px;
+      }
+
+      #download-btn button {
+        display: inline-block;
+        background-color: #2196f3;
+      }
+
+      #download-btn button:hover {
+        background-color: #0b7dda;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Générateur de Meme</h1>
+      <form id="meme-form">
+        <label for="bg-img-url">URL de l'image de fond :</label>
+        <input
+          id="bg-img-url"
+          type="text"
+          placeholder="Entrez l'URL de l'image"
+          required
+        />
+
+        <label for="top-text">Texte du haut :</label>
+        <textarea
+          id="top-text"
+          placeholder="Entrez le texte du haut"
+          required
+        ></textarea>
+
+        <label for="bottom-text">Texte du bas :</label>
+        <textarea
+          id="bottom-text"
+          placeholder="Entrez le texte du bas"
+          required
+        ></textarea>
+
+        <button id="submit-btn" type="submit">Générer le Meme</button>
+      </form>
+
+      <div id="meme-result">
+        <h2>Votre Meme</h2>
+        <img id="meme-img" />
+        <!-- Bouton de téléchargement caché au début -->
+        <a id="download-btn" download="meme-image.png">
+          <button>Télécharger l'image</button>
+        </a>
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById("meme-form");
+      const imgUrl = document.getElementById("bg-img-url");
+      const topText = document.getElementById("top-text");
+      const bottomText = document.getElementById("bottom-text");
+      const memeImg = document.getElementById("meme-img");
+      const downloadBtn = document.getElementById("download-btn");
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        // Envoyer la requête pour générer le mème
+        const resp = await fetch("https://api.my-meme-generator.com/memes", {
+          method: "POST",
+          body: JSON.stringify({
+            bgImgUrl: imgUrl.value,
+            topText: topText.value,
+            bottomText: bottomText.value,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await resp.json();
+
+        // Définir l'URL de l'image du mème généré
+        memeImg.src = data.memeUrl;
+
+        // Afficher le bouton de téléchargement avec l'URL de l'image
+        downloadBtn.style.display = "inline-block"; // Afficher le bouton
+        downloadBtn.href = data.memeUrl; // Définir l'URL de l'image comme source pour le téléchargement
+      });
+    </script>
+  </body>
+</html>

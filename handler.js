@@ -1,5 +1,7 @@
 const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid");
+const fs = require("fs");
+const path = require("path");
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient(
   process.env.IS_OFFLINE && {
@@ -11,12 +13,23 @@ const dynamoDb = new AWS.DynamoDB.DocumentClient(
 const TABLE_NAME = process.env.DYNAMODB_TABLE;
 
 exports.index = async (event) => {
-  return {
-    statusCode: 404,
-    body: JSON.stringify({
-      message: "Url Shortener v1.0",
-    }),
-  };
+  try {
+    const filePath = path.join(__dirname, "public", "index.html");
+    const htmlContent = fs.readFileSync(filePath, "utf-8");
+
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "text/html",
+      },
+      body: htmlContent,
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: "Erreur lors du chargement de la page HTML",
+    };
+  }
 };
 
 exports.createUrl = async (event) => {

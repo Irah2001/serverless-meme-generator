@@ -32,6 +32,7 @@ functions:
       - http:
           path: ""
           method: get
+          cors: true
 
   createUrl:
     handler: handler.createUrl
