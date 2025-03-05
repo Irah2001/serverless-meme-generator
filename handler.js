@@ -1,3 +1,4 @@
+const { createCanvas, loadImage } = require('canvas');
 const AWS = require("aws-sdk");
 const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
@@ -7,6 +8,8 @@ const dynamoDb = new AWS.DynamoDB.DocumentClient(
   process.env.IS_OFFLINE && {
     region: "localhost",
     endpoint: "http://localhost:8000",
+    accessKeyId: 'xxxx',
+    secretAccessKey: 'xxxx',
   }
 );
 
@@ -32,78 +35,76 @@ exports.index = async (event) => {
   }
 };
 
-exports.createUrl = async (event) => {
-  const { url } = JSON.parse(event.body);
-  const key = uuidv4().slice(0, 8);
+exports.generateMeme = async (event) => {
+  try {
+    const body = JSON.parse(event.body);
+    const { topText, bottomText, bgImgUrl } = body;
+    const width = 500;
+    const height = 500;
+    const bgImg = await loadImage(bgImgUrl);
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
 
-  const params = {
-    TableName: TABLE_NAME,
-    Item: {
-      key,
-      url,
-      createdAt: new Date().toISOString(),
-      clicks: 0,
-    },
-  };
+    ctx.drawImage(bgImg, 0, 0, width, height);
 
-  await dynamoDb.put(params).promise();
+    // Style
+    ctx.font = '64px sans-serif';
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ key, shortUrl: `http://localhost:3000/url/${key}` }),
-  };
+    // Textes
+    ctx.fillText(topText, width / 2, 60);
+    ctx.fillText(bottomText, width / 2, height - 60);
+
+    const key = uuidv4().slice(0, 8);
+    const buffer = canvas.toBuffer('image/png');
+
+    const params = {
+      TableName: TABLE_NAME,
+      Item: {
+        key,
+        topText,
+        bottomText,
+        image: buffer,
+        createdAt: new Date().toISOString()
+      }
+    };
+    await dynamoDb.put(params).promise();
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: 'Meme generated and saved successfully in DynamoDB',
+        key,
+      })
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: 'Error generating meme', error: error.message })
+    };
+  }
 };
 
-exports.listUrls = async (event) => {
-  const params = {
-    TableName: TABLE_NAME,
-  };
-
-  const { Items } = await dynamoDb.scan(params).promise();
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify(Items),
-  };
-};
-
-exports.getUrl = async (event) => {
+exports.downloadMeme = async (event) => {
   const { key } = event.pathParameters;
-
   const params = {
     TableName: TABLE_NAME,
     Key: {
       key,
-    },
+    }
   };
 
   const { Item } = await dynamoDb.get(params).promise();
 
-  // Increase the number of clicks
-  await dynamoDb
-    .update({
-      TableName: TABLE_NAME,
-      Key: {
-        key,
-      },
-      UpdateExpression: "SET clicks = clicks + :inc",
-      ExpressionAttributeValues: {
-        ":inc": 1,
-      },
-    })
-    .promise();
-
-  if (!Item) {
-    return {
-      statusCode: 404,
-      body: JSON.stringify({ message: "URL not found" }),
-    };
-  }
-
   return {
-    statusCode: 301,
+    statusCode: 200,
     headers: {
-      Location: Item.url,
+      'Content-Type': 'image/png',
+      'Content-Disposition': 'attachment; filename="meme.png"'
     },
+    body: Item.image.toString('base64'),
+    isBase64Encoded: true
   };
 };

@@ -34,25 +34,18 @@ functions:
           method: get
           cors: true
 
-  createUrl:
-    handler: handler.createUrl
+  generateMeme:
+    handler: handler.generateMeme
     events:
       - http:
-          path: url
+          path: generate
           method: post
 
-  listUrls:
-    handler: handler.listUrls
+  downloadMeme:
+    handler: handler.downloadMeme
     events:
       - http:
-          path: url
-          method: get
-
-  getUrl:
-    handler: handler.getUrl
-    events:
-      - http:
-          path: url/{key}
+          path: download/{key}
           method: get
 
 resources:
