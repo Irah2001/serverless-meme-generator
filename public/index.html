@@ -6,7 +6,7 @@
     <title>Générateur de Meme</title>
     <style>
       body {
-        font-family: 'Roboto', sans-serif;
+        font-family: "Roboto", sans-serif;
         margin: 0;
         padding: 0;
         background-color: #f0f0f5;
@@ -16,7 +16,6 @@
         min-height: 100vh;
         overflow-x: hidden;
       }
-
 
       .container {
         background-color: #ffffff;
@@ -143,10 +142,11 @@
         <button id="submit-btn" type="submit">Générer le Meme</button>
       </form>
 
-      <div id="meme-result" style="display: none;">
+      <div id="meme-result" style="display: none">
         <h2>Votre Meme</h2>
         <img id="meme-img" alt="" />
-        <a id="download-btn" href="" download="meme-image.png">
+        <!-- Bouton de téléchargement caché au début -->
+        <a id="download-btn" href="" download>
           <button>Télécharger l'image</button>
         </a>
       </div>
@@ -160,6 +160,19 @@
       const memeImg = document.getElementById("meme-img");
       const downloadBtn = document.getElementById("download-btn");
       const memeResult = document.getElementById("meme-result");
+
+      downloadBtn.addEventListener("click", async function () {
+        const image = await fetch(downloadBtn.href);
+        const imageBlog = await image.blob();
+        const imageURL = URL.createObjectURL(imageBlog);
+
+        const link = document.createElement("a");
+        link.href = imageURL;
+        link.download = "name";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      });
 
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -178,13 +191,15 @@
 
         const data = await resp.json();
 
-        const download = await fetch("http://localhost:3000/dev/download/" + data.key, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
+        const download = await fetch(
+          "http://localhost:3000/dev/download/" + data.key,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
         const imageData = await download.json();
 
         memeImg.src = imageData.imageUrl;
