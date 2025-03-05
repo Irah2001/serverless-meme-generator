@@ -3,9 +3,45 @@
 ## Prerequisites
 
 - Node.js installed
+- Docker installed (for MinIO and local DynamoDB)
 - Serverless Framework installed (`npm install -g serverless`)
+- 
 
-## Starting the Project Locally
+## Starting the Project Locally (with Minio)
+
+Start MinIO with Docker:
+
+```bash
+docker-compose up -d
+```
+
+### Access MinIO
+
+Once MinIO is running, you can access it via:
+🔗 API: `http://localhost:9000`
+🔗 Web Console: `http://localhost:9001`
+
+⚠️ Default credentials:
+
+Access Key: minioadmin
+Secret Key: minioadmin
+
+### Create a MinIO Bucket
+
+To store generated memes, you need to create a bucket named memes-bucket.
+
+Via MinIO Web Console
+
+- Open `http://localhost:9001`
+- Log in with minioadmin / minioadmin
+- Click Create Bucket
+- Set bucket name: memes-bucket
+- Click Create
+- Change the Access Policy to Public
+
+The API Minio will be available at `http://localhost:9000` by default.
+
+### Run the project locally
 
 To run the project locally using serverless-offline, use the following command:
 
