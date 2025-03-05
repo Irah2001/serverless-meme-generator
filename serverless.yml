@@ -1,5 +1,5 @@
 # "org" ensures this Service is used with the correct Serverless Framework Access Key.
-org: esgim1 # Change by the organization attached to your serverless account
+#org: esgim1 # Change by the organization attached to your serverless account
 # "app" enables Serverless Framework Dashboard features and sharing them with other Services.
 app: serverless-meme-generator
 # "service" is the name of this project. This will also be added to your AWS resource names.
